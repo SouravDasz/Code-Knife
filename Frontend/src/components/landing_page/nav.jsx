@@ -42,7 +42,7 @@ const Nav = () => {
           </svg>
 
           <span className="text-[21px] font-bold tracking-tight text-neutral-800">
-            helicone
+            Code Knife
           </span>
         </a>
 

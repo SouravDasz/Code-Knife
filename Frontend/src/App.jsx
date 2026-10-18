@@ -1,12 +1,13 @@
 import React from 'react'
-import Nav from "./components/landing_page/nav"
-import Hero from './components/landing_page/hero'
+import Landing_page from './components/landing_page/landing_page'
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 const  App = () => {
   return (
-    <>
-    <Nav/>
-    <Hero/>
-    </>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Landing_page/>}/>
+          </Routes>
+        </BrowserRouter>
   )
 }
 
