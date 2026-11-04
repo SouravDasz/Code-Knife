@@ -1,4 +1,3 @@
-
 import { useMemo, useRef, useState } from "react";
 import ForceGraph2D from "react-force-graph-2d";
 import {
@@ -70,9 +69,11 @@ const fileIcon = (name) => {
 
 const getFolderColor = (path) => {
   let hash = 0;
+
   for (let index = 0; index < path.length; index += 1) {
     hash = (hash * 31 + path.charCodeAt(index)) | 0;
   }
+
   return folderColors[Math.abs(hash) % folderColors.length];
 };
 
@@ -126,21 +127,13 @@ const NodeCard = ({ node, path, level, selected, onClick }) => {
         hover:-translate-y-1 hover:brightness-110
         focus:outline-none
         ${sizes[Math.min(level, 3)]}
-        ${
-          isFolder
-            ? ""
-            : "border-[#38BDF8] text-[#0F172A] hover:bg-sky-50"
-        }
-        ${
-          selected
-            ? "ring-2 ring-[#0891B2] ring-offset-2 ring-offset-white"
-            : ""
-        }
+        ${isFolder ? "" : "border-[#38BDF8] text-[#0F172A] hover:bg-sky-50"}
+        ${selected ? "ring-2 ring-cyan-500 ring-offset-2" : ""}
       `}
     >
       <Icon
         className="h-4 w-4 shrink-0"
-        style={{         color: isFolder ? folderTextColor : "#1E3A8A" }}
+        style={{ color: isFolder ? folderTextColor : "#1E3A8A" }}
       />
       <span className="truncate">{node.name}</span>
     </button>
@@ -150,10 +143,9 @@ const NodeCard = ({ node, path, level, selected, onClick }) => {
 const TreeBranch = ({ node, path, level, selected, onSelect }) => {
   const [expanded, setExpanded] = useState(level < 1);
 
-  const hasChildren =
-    node.type === "folder" && node.children?.length > 0;
+  const hasChildren = node.type === "folder" && node.children?.length > 0;
 
-  const click = () => {
+  const handleClick = () => {
     onSelect(path);
 
     if (hasChildren) {
@@ -169,16 +161,12 @@ const TreeBranch = ({ node, path, level, selected, onSelect }) => {
           path={path}
           level={level}
           selected={selected === path}
-          onClick={click}
+          onClick={handleClick}
         />
 
         {hasChildren && (
           <span className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full border border-slate-300 bg-white text-slate-600 shadow-sm">
-            {expanded ? (
-              <ChevronDown size={12} />
-            ) : (
-              <ChevronRight size={12} />
-            )}
+            {expanded ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
           </span>
         )}
       </div>
@@ -223,8 +211,14 @@ const RootedTree = ({ tree = [] }) => {
   return (
     <div className="overflow-auto rounded-2xl border border-slate-200 bg-slate-50 p-8 shadow-sm">
       <div className="flex min-w-max flex-col items-center">
-        {/* Repository root */}
-        <div className="flex items-center gap-3 rounded-xl border border-blue-300 px-7 py-4 font-semibold" style={{ backgroundColor: rootColor, color: "#FFFFFF", boxShadow: "0 2px 8px rgba(33, 150, 210, 0.25)" }}>
+        <div
+          className="flex items-center gap-3 rounded-xl border border-blue-300 px-7 py-4 font-semibold"
+          style={{
+            backgroundColor: rootColor,
+            color: "#FFFFFF",
+            boxShadow: "0 2px 8px rgba(33, 150, 210, 0.25)",
+          }}
+        >
           <GitBranch className="h-5 w-5 text-white" />
           Repository Root
         </div>
@@ -262,14 +256,12 @@ const createGraphData = (tree) => {
   const nodes = [];
   const links = [];
 
-  // Repository root node
   nodes.push({
     id: "repository",
     name: "Repository",
     path: "repository",
     type: "root",
     color: rootColor,
-    // Keep the repository root visually larger than every child.
     val: 20,
   });
 
@@ -277,23 +269,18 @@ const createGraphData = (tree) => {
     items.forEach((item) => {
       const path = nodePath(parentPath, item.name);
       const id = path;
-
       const isFolder = item.type === "folder";
 
-      const node = {
+      nodes.push({
         id,
         name: item.name,
         path,
         type: isFolder ? "folder" : "file",
         depth,
         color: isFolder ? getFolderColor(path) : graphFileColor,
-        // Folder size decreases with depth; files remain the smallest nodes.
         val: isFolder ? Math.max(7, 16 - depth * 2) : 3.5,
-      };
+      });
 
-      nodes.push(node);
-
-      // Parent-child relationship
       links.push({
         source: parentId,
         target: id,
@@ -313,13 +300,9 @@ const createGraphData = (tree) => {
 
 const GraphView = ({ tree = [] }) => {
   const graphRef = useRef(null);
-
   const [selected, setSelected] = useState(null);
 
-  const graphData = useMemo(
-    () => createGraphData(tree),
-    [tree]
-  );
+  const graphData = useMemo(() => createGraphData(tree), [tree]);
 
   if (!tree.length) {
     return (
@@ -331,14 +314,9 @@ const GraphView = ({ tree = [] }) => {
     if (!selected) return false;
 
     const source =
-      typeof link.source === "object"
-        ? link.source.id
-        : link.source;
-
+      typeof link.source === "object" ? link.source.id : link.source;
     const target =
-      typeof link.target === "object"
-        ? link.target.id
-        : link.target;
+      typeof link.target === "object" ? link.target.id : link.target;
 
     return source === selected || target === selected;
   };
@@ -346,18 +324,18 @@ const GraphView = ({ tree = [] }) => {
   const handleNodeClick = (node) => {
     setSelected(node.id);
 
-    graphRef.current?.centerAt(node.x, node.y, 500);
-    graphRef.current?.zoom(2, 500);
+    // Move the camera smoothly without restarting the force simulation.
+    graphRef.current?.centerAt(node.x, node.y, 300);
+    graphRef.current?.zoom(1.5, 300);
   };
 
   const resetGraph = () => {
     setSelected(null);
-    graphRef.current?.zoomToFit(500, 80);
+    graphRef.current?.zoomToFit(350, 80);
   };
 
   return (
     <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-      {/* Graph header */}
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 bg-white px-5 py-4">
         <div>
           <h3 className="font-semibold text-slate-800">
@@ -377,7 +355,6 @@ const GraphView = ({ tree = [] }) => {
         </button>
       </div>
 
-      {/* Graph canvas */}
       <div className="relative h-[650px] w-full">
         <ForceGraph2D
           ref={graphRef}
@@ -385,36 +362,31 @@ const GraphView = ({ tree = [] }) => {
           width={undefined}
           height={650}
           backgroundColor={colors.background}
+          dagMode={null}
 
-          // Force simulation
-          cooldownTicks={150}
-          warmupTicks={80}
-          d3AlphaDecay={0.025}
-          d3VelocityDecay={0.4}
-          d3AlphaMin={0.02}
+          // Use a restrained force animation with a small amount of spring stretch.
+          warmupTicks={20}
+          cooldownTicks={Infinity}
+          cooldownTime={Infinity}
+          d3AlphaDecay={0.02}
+          d3AlphaMin={0.001}
+          d3AlphaTarget={0.015}
+          d3VelocityDecay={0.8}
           nodeRelSize={5}
           linkDistance={(link) => {
             const target =
               typeof link.target === "object"
                 ? link.target
-                : graphData.nodes.find((n) => n.id === link.target);
+                : graphData.nodes.find((node) => node.id === link.target);
 
-            return target?.type === "folder" ? 100 : 65;
+            return target?.type === "folder" ? 88 : 62;
           }}
-          linkWidth={(link) =>
-            isConnectedToSelected(link) ? 2.5 : 1
-          }
+          linkWidth={(link) => (isConnectedToSelected(link) ? 1.8 : 1)}
           linkColor={(link) =>
-            isConnectedToSelected(link)
-              ? selectedColor
-              : colors.connector
+            isConnectedToSelected(link) ? selectedColor : colors.connector
           }
-
-          // Node colors and sizes
           nodeVal={(node) => node.val}
           nodeColor={(node) => node.color}
-
-          // Custom node appearance
           nodeCanvasObjectMode={() => "replace"}
           nodeCanvasObject={(node, ctx, globalScale) => {
             const radius =
@@ -426,19 +398,24 @@ const GraphView = ({ tree = [] }) => {
 
             const isSelected = selected === node.id;
 
-            // Node body
+            // A steady selection ring; no pulsing or continuous animation.
+            if (isSelected) {
+              ctx.beginPath();
+              ctx.arc(node.x, node.y, radius + 4, 0, 2 * Math.PI);
+              ctx.strokeStyle = selectedColor;
+              ctx.lineWidth = 2;
+              ctx.stroke();
+            }
+
             ctx.beginPath();
             ctx.arc(node.x, node.y, radius, 0, 2 * Math.PI);
             ctx.fillStyle = node.color;
             ctx.fill();
 
-            if (isSelected) {
-              ctx.strokeStyle = selectedColor;
-              ctx.lineWidth = 2.5;
-              ctx.stroke();
-            }
+            ctx.lineWidth = 1;
+            ctx.strokeStyle = isSelected ? selectedColor : "#64748B";
+            ctx.stroke();
 
-            // Label
             const fontSize = Math.max(
               3.5,
               node.type === "root" ? 5 : 4 / globalScale
@@ -457,18 +434,16 @@ const GraphView = ({ tree = [] }) => {
 
             ctx.fillText(label, node.x, node.y + radius + 4);
           }}
-
-          // Interaction
           onNodeClick={handleNodeClick}
-          enableNodeDrag={true}
-          enableZoomInteraction={true}
-          enablePanInteraction={true}
+          enableNodeDrag
+          enableZoomInteraction
+          enablePanInteraction
           minZoom={0.3}
           maxZoom={8}
+          autoPauseRedraw={false}
         />
       </div>
 
-      {/* Legend */}
       <div className="flex flex-wrap items-center gap-6 border-t border-slate-200 bg-slate-50 px-5 py-4">
         {[
           { label: "Repository", color: rootColor },
@@ -481,18 +456,14 @@ const GraphView = ({ tree = [] }) => {
               className="h-3 w-3 rounded-full"
               style={{ backgroundColor: item.color }}
             />
-            <span className="text-xs text-slate-600">
-              {item.label}
-            </span>
+            <span className="text-xs text-slate-600">{item.label}</span>
           </div>
         ))}
       </div>
 
       {selected && (
         <div className="border-t border-slate-200 bg-slate-50 px-5 py-3">
-          <p className="text-xs text-cyan-700">
-            Selected node: {selected}
-          </p>
+          <p className="text-xs text-cyan-700">Selected node: {selected}</p>
         </div>
       )}
     </div>
