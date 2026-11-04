@@ -1,5 +1,5 @@
 import httpx
-
+import base64
 
 async def fetch_repository_tree(owner: str, repo: str):
     base_url = f"https://api.github.com/repos/{owner}/{repo}"
@@ -13,61 +13,35 @@ async def fetch_repository_tree(owner: str, repo: str):
             params={"recursive": "1"},
         )
         tree_response.raise_for_status()
-        return tree_response.json()
+        return {
+            "branch": default_branch,
+            "tree": tree_response.json()["tree"],
+        }
 
 
+async def fetch_file_content(
+    owner: str,
+    repo: str,
+    branch: str,
+    path: str,
+):
+    url = f"https://api.github.com/repos/{owner}/{repo}/contents/{path}"
 
-def build_file_tree(entries):
-    root = {}
+    async with httpx.AsyncClient(timeout=30) as client:
+        response = await client.get(url, params={"ref": branch})
+        response.raise_for_status()
 
-    for entry in entries:
-        current = root
-        parts = entry["path"].split("/")
+        data=response.json()
 
-        # Create parent folders
-        for folder in parts[:-1]:
-            current = current.setdefault(
-                folder,
-                {
-                    "name": folder,
-                    "type": "folder",
-                    "children": {}
-                }
-            )["children"]
-
-        name = parts[-1]
-
-        if entry["type"] == "tree":
-            current.setdefault(
-                name,
-                {
-                    "name": name,
-                    "type": "folder",
-                    "children": {},
-                    "sha": entry["sha"]
-                }
-            )
-
-        elif entry["type"] == "blob":
-            current[name] = {
-                "name": name,
-                "type": "file",
-                "sha": entry["sha"],
-                "size": entry.get("size")
-            }
-
-    def convert(nodes):
-        result = []
-
-        for node in sorted(
-            nodes.values(),
-            key=lambda item: (item["type"] != "folder", item["name"].lower()),
-        ):
-            if node["type"] == "folder":
-                node["children"] = convert(node["children"])
-
-            result.append(node)
-
-        return result
-
-    return convert(root)
+        if data.get("encoding") != "base64":
+            raise ValueError("Unsupported file encoding")
+        content = base64.b64decode(data["content"]).decode(
+            "utf-8",
+            errors="replace"
+        )
+        return {
+            "name": data["name"],
+            "path": data["path"],
+            "size": data["size"],
+            "content": content
+        }

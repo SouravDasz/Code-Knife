@@ -71,6 +71,14 @@ const Body = () => {
         "repositoryAnalysis",
         JSON.stringify(data)
       );
+      sessionStorage.setItem(
+        "repositoryAnalysisContext",
+        JSON.stringify({
+          owner,
+          repo,
+          branch: data.branch || data.default_branch || null,
+        })
+      );
 
       window.location.href = "/repository/results";
     } catch (err) {

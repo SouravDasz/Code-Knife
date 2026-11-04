@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
-import { FolderTree, GitBranch, Network } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { FolderTree, GitBranch, Network, Code2 } from "lucide-react";
+import { Link } from "react-router-dom";
 import Nav from "../landing_page/nav";
 import FileTree from "../file_tree/File_tree";
 import { GraphView, RootedTree } from "../file_tree/Visualizations";
@@ -42,6 +43,23 @@ function Results() {
     <div className="min-h-screen bg-slate-50 text-slate-900">
       <Nav />
       <main className="mx-auto max-w-5xl px-6 py-10 md:px-8">
+        <div className="mb-8 flex items-center justify-center rounded-xl border border-slate-200 bg-white p-2 shadow-sm">
+          <Link
+            to="/repository/results"
+            className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-3 text-sm font-semibold text-white shadow-sm"
+          >
+            <FolderTree className="h-4 w-4" />
+            Repository Explorer
+          </Link>
+          <Link
+            to="/repository/browser"
+            className="flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-3 text-sm font-semibold text-slate-600 transition-colors hover:bg-slate-100"
+          >
+            <Code2 className="h-4 w-4" />
+            File Explorer
+          </Link>
+        </div>
+
         <div className="mb-8">
           <div className="mb-3 flex items-center gap-3">
             <span className="rounded-lg bg-blue-100 p-2 text-blue-600">
@@ -75,7 +93,7 @@ function Results() {
                   : "text-slate-600 hover:bg-slate-100"
               }`}
             >
-              <Icon className="h-4 w-4" />
+              {React.createElement(Icon, { className: "h-4 w-4" })}
               {label}
             </button>
           ))}
