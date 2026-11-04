@@ -119,7 +119,7 @@ const Hero = () => {
             {/* Buttons */}
             <div className="mt-8 flex flex-wrap items-center gap-4">
               <a
-                href="/features"
+                href="/repository"
                 className="inline-flex h-[52px] items-center gap-3 rounded-lg bg-[#4BA3E8] px-7 text-[16px] font-semibold text-white shadow-sm transition hover:bg-[#3293DF]"
               >
                 Explore features
